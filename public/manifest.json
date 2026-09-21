@@ -1,0 +1,17 @@
+{
+  "name": "FAKE_SPEAK - AI Speaking Exam Lab",
+  "short_name": "FAKE_SPEAK",
+  "description": "AI-powered adaptive speaking exam prep for IELTS & TOEIC",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
