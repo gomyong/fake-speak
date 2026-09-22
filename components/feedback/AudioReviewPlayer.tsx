@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Volume2, Download, FastForward } from 'lucide-react';
-import { getAudioRecordBySession, LocalAudioRecord } from '@/lib/db/localAudioStore';
+import { Play, Pause, Volume2, Download } from 'lucide-react';
+import { getAudioRecordBySession } from '@/lib/db/localAudioStore';
 
 interface AudioReviewPlayerProps {
   sessionUuid: string;
@@ -104,7 +104,7 @@ export const AudioReviewPlayer: React.FC<AudioReviewPlayerProps> = ({
 
   if (loading) {
     return (
-      <div className="p-4 rounded-xl glass-card border border-slate-800 text-center text-xs text-slate-400">
+      <div className="boro-panel p-4 text-center text-xs text-boro-muted">
         Loading audio from local IndexedDB...
       </div>
     );
@@ -112,14 +112,14 @@ export const AudioReviewPlayer: React.FC<AudioReviewPlayerProps> = ({
 
   if (!audioUrl) {
     return (
-      <div className="p-4 rounded-xl glass-card border border-slate-800 text-center text-xs text-slate-500">
+      <div className="boro-panel p-4 text-center text-xs text-boro-muted2">
         No local audio recording found for this session.
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-5 rounded-2xl glass-panel border border-slate-800 space-y-3">
+    <div className="boro-card p-5 space-y-3">
       <audio
         ref={audioRef}
         src={audioUrl}
@@ -130,16 +130,16 @@ export const AudioReviewPlayer: React.FC<AudioReviewPlayerProps> = ({
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Volume2 className="w-4 h-4 text-indigo-400" />
-          <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-            Local Voice Playback (0ms Latency)
+          <Volume2 className="w-4 h-4 text-boro-blue stroke-[1.5]" />
+          <span className="text-xs font-semibold text-boro-text uppercase tracking-wider">
+            Voice Playback (Local 0ms)
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={cyclePlaybackRate}
-            className="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-[11px] font-semibold text-slate-300 transition-colors"
+            className="boro-btn-secondary px-2.5 py-1 text-[11px]"
             title="Change Playback Speed"
           >
             {playbackRate}x
@@ -147,10 +147,10 @@ export const AudioReviewPlayer: React.FC<AudioReviewPlayerProps> = ({
           <a
             href={audioUrl}
             download={`fakespeak_${sessionUuid}.webm`}
-            className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition-colors"
+            className="boro-btn-secondary p-1.5"
             title="Download Audio Recording"
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download className="w-3.5 h-3.5 stroke-[1.5]" />
           </a>
         </div>
       </div>
@@ -158,7 +158,7 @@ export const AudioReviewPlayer: React.FC<AudioReviewPlayerProps> = ({
       <div className="flex items-center gap-3">
         <button
           onClick={togglePlay}
-          className="w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shrink-0 transition-all active:scale-95 shadow-md shadow-indigo-600/30"
+          className="boro-btn-primary w-10 h-10 flex items-center justify-center shrink-0"
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
@@ -171,9 +171,9 @@ export const AudioReviewPlayer: React.FC<AudioReviewPlayerProps> = ({
             max={duration || 100}
             value={currentTime}
             onChange={handleSeek}
-            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+            className="w-full h-1.5 bg-surface-container rounded-full appearance-none cursor-pointer accent-boro-blue"
           />
-          <div className="flex justify-between text-[11px] text-slate-400 font-mono">
+          <div className="flex justify-between text-[11px] text-boro-muted font-mono">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>

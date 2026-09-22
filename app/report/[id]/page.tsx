@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Award, Calendar, Volume2, Sparkles, BookOpen } from 'lucide-react';
+import { ArrowLeft, Calendar } from 'lucide-react';
 import { localDB, LocalEvaluationRecord } from '@/lib/db/localAudioStore';
 import { AudioReviewPlayer } from '@/components/feedback/AudioReviewPlayer';
 import { EvaluationReport } from '@/components/feedback/EvaluationReport';
@@ -35,9 +35,9 @@ export default function SessionReportPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#090d16] text-slate-400 text-sm">
+      <div className="min-h-screen flex items-center justify-center bg-surface text-boro-muted text-sm">
         <div className="text-center space-y-3">
-          <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="w-8 h-8 border-2 border-boro-blue border-t-transparent rounded-full animate-spin mx-auto" />
           <p>Retrieving session from local IndexedDB...</p>
         </div>
       </div>
@@ -46,11 +46,11 @@ export default function SessionReportPage() {
 
   if (!record) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#090d16] text-slate-400 p-6 space-y-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-surface text-boro-muted p-6 space-y-4">
         <p className="text-sm">Session record not found in your browser storage.</p>
         <Link
           href="/"
-          className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-semibold"
+          className="boro-btn-primary px-5 py-2.5 text-xs"
         >
           Return to Dashboard
         </Link>
@@ -59,36 +59,36 @@ export default function SessionReportPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#090d16] text-slate-100">
-      <header className="w-full px-6 py-4 flex items-center justify-between border-b border-slate-800 bg-[#0c121e]/80 backdrop-blur-md sticky top-0 z-50">
+    <div className="min-h-screen flex flex-col bg-surface text-boro-text">
+      <header className="w-full px-6 py-4 flex items-center justify-between border-b border-boro-border bg-surface/90 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+            className="p-2 rounded-full text-boro-muted hover:text-boro-text hover:bg-surface-container transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 stroke-[1.5]" />
           </Link>
 
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400 text-base">
-                FAKE_SPEAK
-              </span>
-              <span className="text-slate-600">/</span>
-              <span className="text-xs font-semibold text-slate-300">
-                {record.exam_type} ({record.part_or_question})
-              </span>
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-full border-[1.5px] border-boro-text flex items-center justify-center font-bold text-xs">
+              F
             </div>
+            <span className="font-semibold tracking-tight text-boro-text text-base">
+              FAKE_SPEAK
+            </span>
+            <span className="boro-chip text-[11px] py-0.5 px-2.5">
+              {record.exam_type} ({record.part_or_question})
+            </span>
           </div>
         </div>
 
-        <div className="text-xs text-slate-400 flex items-center gap-1.5">
-          <Calendar className="w-3.5 h-3.5" />
+        <div className="text-xs text-boro-muted flex items-center gap-1.5">
+          <Calendar className="w-3.5 h-3.5 stroke-[1.5]" />
           <span>{new Date(record.created_at).toLocaleDateString()}</span>
         </div>
       </header>
 
-      <main className="flex-1 max-w-4xl w-full mx-auto p-6 space-y-8">
+      <main className="flex-1 max-w-4xl w-full mx-auto p-6 space-y-6">
         {/* 오디오 복습 플레이어 */}
         <AudioReviewPlayer sessionUuid={sessionUuid} />
 

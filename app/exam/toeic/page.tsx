@@ -11,9 +11,8 @@ import { useAudioRecorder, AudioRecordingResult } from '@/lib/audio/useAudioReco
 import { useSpeechRecognition } from '@/lib/audio/useSpeechRecognition';
 import { unlockAudioContext, playTransitionChime } from '@/lib/audio/soundEffects';
 import { saveAudioRecord, saveLocalEvaluation } from '@/lib/db/localAudioStore';
-import { CuratedQuestion } from '@/lib/ai/curator';
 import { EvaluationResult } from '@/lib/ai/evaluator';
-import { Zap, HelpCircle, Image as ImageIcon, FileText, CheckCircle } from 'lucide-react';
+import { Zap } from 'lucide-react';
 
 interface ToeicQuestionSpec {
   index: number;
@@ -147,8 +146,7 @@ export default function ToeicExamPage() {
 
   const currentSpec = TOEIC_QUESTIONS_SPEC[currentQuestionIdx];
 
-  const { isRecording, recordingDuration, startRecording, stopRecording, resetRecording } =
-    useAudioRecorder();
+  const { isRecording, startRecording, stopRecording, resetRecording } = useAudioRecorder();
   const {
     transcript,
     interimTranscript,
@@ -180,13 +178,11 @@ export default function ToeicExamPage() {
     }
   };
 
-  // 준비 시간 종료 -> 발화 전환
   const handlePrepComplete = () => {
     playTransitionChime();
     setExamState('SPEAKING');
   };
 
-  // 발화 시작 시 녹음 및 STT
   useEffect(() => {
     if (examState === 'SPEAKING') {
       startRecording();
@@ -194,7 +190,6 @@ export default function ToeicExamPage() {
     }
   }, [examState, startRecording, startListening]);
 
-  // 발화 종료
   const handleFinishSpeaking = async () => {
     if (examState !== 'SPEAKING') return;
 
@@ -208,7 +203,6 @@ export default function ToeicExamPage() {
       console.warn('Stop recording failed:', err);
     }
 
-    // IndexedDB 로컬 오디오 Blob 저장
     let audioKey = '';
     if (recorded?.blob) {
       try {
@@ -225,7 +219,6 @@ export default function ToeicExamPage() {
       }
     }
 
-    // 채점 API 호출
     try {
       const finalTranscript = transcript.trim() || 'No clear utterance recorded';
       const evalRes = await fetch('/api/evaluate', {
@@ -243,7 +236,6 @@ export default function ToeicExamPage() {
       const evalData: EvaluationResult = await evalRes.json();
       setEvaluation(evalData);
 
-      // 로컬 평가 저장
       await saveLocalEvaluation({
         session_uuid: sessionUuid,
         exam_type: 'TOEIC',
@@ -266,7 +258,6 @@ export default function ToeicExamPage() {
     }
   };
 
-  // 다음 문항 진행
   const handleNextQuestion = () => {
     if (currentQuestionIdx < TOEIC_QUESTIONS_SPEC.length - 1) {
       startQuestion(currentQuestionIdx + 1);
@@ -276,7 +267,7 @@ export default function ToeicExamPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#090d16] text-slate-100">
+    <div className="min-h-screen flex flex-col bg-surface text-boro-text">
       <ExamHeader
         examType="TOEIC"
         sectionTitle={currentSpec.title}
@@ -287,23 +278,23 @@ export default function ToeicExamPage() {
       <main className="flex-1 max-w-4xl w-full mx-auto p-6 flex flex-col justify-center items-center">
         {/* 시작 전 화면 */}
         {examState === 'IDLE' && (
-          <div className="text-center space-y-6 max-w-md">
-            <div className="w-20 h-20 rounded-3xl bg-violet-600/20 border border-violet-500/40 flex items-center justify-center mx-auto text-violet-400 shadow-xl shadow-violet-600/10">
-              <Zap className="w-10 h-10" />
+          <div className="boro-card p-8 sm:p-10 text-center space-y-6 max-w-md w-full">
+            <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center mx-auto text-boro-blue">
+              <Zap className="w-6 h-6 stroke-[1.5]" />
             </div>
 
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-white tracking-tight">
-                TOEIC Speaking Simulation
+            <div className="space-y-1.5">
+              <h2 className="text-2xl font-semibold tracking-tight text-boro-text">
+                TOEIC Speaking
               </h2>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+              <p className="text-xs sm:text-sm text-boro-muted leading-relaxed">
                 실제 토익스피킹 11개 전 문항을 시험 규격 타이머와 표준 비프음으로 시뮬레이션합니다.
               </p>
             </div>
 
             <button
               onClick={handleStartExam}
-              className="w-full py-4 px-6 rounded-2xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm shadow-xl shadow-violet-600/30 transition-all hover:scale-105 active:scale-95"
+              className="boro-btn-primary w-full py-3.5 px-6 text-sm"
             >
               Start TOEIC Simulation (Q1 - Q11)
             </button>
@@ -313,12 +304,12 @@ export default function ToeicExamPage() {
         {/* 준비 (Preparation) 단계 */}
         {examState === 'PREPARATION' && (
           <div className="w-full space-y-6 flex flex-col items-center">
-            <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-slate-800 text-center space-y-4 w-full max-w-2xl">
-              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+            <div className="boro-card p-6 sm:p-8 text-center space-y-3 w-full max-w-2xl">
+              <span className="boro-chip">
                 {currentSpec.title} • Preparation Time
               </span>
-              <p className="text-xs text-slate-400">{currentSpec.typeDesc}</p>
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 text-sm text-slate-200 leading-relaxed whitespace-pre-line text-left font-medium">
+              <p className="text-xs text-boro-muted">{currentSpec.typeDesc}</p>
+              <div className="p-4 rounded-card bg-surface-container text-sm text-boro-text leading-relaxed whitespace-pre-line text-left font-medium">
                 {currentSpec.samplePrompt}
               </div>
             </div>
@@ -331,9 +322,9 @@ export default function ToeicExamPage() {
 
             <button
               onClick={handlePrepComplete}
-              className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-colors"
+              className="boro-btn-secondary px-5 py-2.5 text-xs"
             >
-              Skip Prep & Start Speaking Now
+              Skip Preparation & Start Speaking
             </button>
           </div>
         )}
@@ -341,11 +332,11 @@ export default function ToeicExamPage() {
         {/* 발화 (Speaking) 단계 */}
         {examState === 'SPEAKING' && (
           <div className="w-full space-y-8 flex flex-col items-center">
-            <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-slate-800 text-center space-y-4 w-full max-w-2xl">
-              <span className="text-xs font-bold text-violet-400 uppercase tracking-wider">
+            <div className="boro-card p-6 sm:p-8 text-center space-y-3 w-full max-w-2xl">
+              <span className="boro-chip">
                 {currentSpec.title} • Response Time
               </span>
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 text-sm text-slate-200 leading-relaxed whitespace-pre-line text-left font-medium">
+              <div className="p-4 rounded-card bg-surface-container text-sm text-boro-text leading-relaxed whitespace-pre-line text-left font-medium">
                 {currentSpec.samplePrompt}
               </div>
             </div>
@@ -359,11 +350,11 @@ export default function ToeicExamPage() {
             <MicrophoneButton
               isRecording={isRecording}
               onToggle={handleFinishSpeaking}
-              statusText={isRecording ? 'Speaking... Tap to Finish Early' : 'Initializing...'}
+              statusText={isRecording ? 'Speaking... Tap to finish early' : 'Initializing...'}
             />
 
-            <div className="w-full max-w-xl glass-card p-4 rounded-xl border border-slate-800/80 text-center min-h-[60px] flex items-center justify-center">
-              <p className="text-xs text-slate-300 italic">
+            <div className="w-full max-w-xl boro-panel p-4 text-center min-h-[56px] flex items-center justify-center">
+              <p className="text-xs text-boro-muted italic">
                 {transcript || interimTranscript || 'Speak clearly into your microphone...'}
               </p>
             </div>
@@ -372,9 +363,9 @@ export default function ToeicExamPage() {
 
         {/* 채점 중 상태 */}
         {examState === 'EVALUATING' && (
-          <div className="text-center space-y-4">
-            <div className="w-12 h-12 border-4 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto" />
-            <h3 className="text-base font-bold text-white">Scoring Question {currentSpec.index}...</h3>
+          <div className="text-center space-y-3">
+            <div className="w-8 h-8 border-2 border-boro-blue border-t-transparent rounded-full animate-spin mx-auto" />
+            <h3 className="text-sm font-semibold text-boro-text">Scoring Question {currentSpec.index}...</h3>
           </div>
         )}
 

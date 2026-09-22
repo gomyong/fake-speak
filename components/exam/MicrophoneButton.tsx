@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Mic, MicOff, Square } from 'lucide-react';
+import { Mic, Square } from 'lucide-react';
 
 interface MicrophoneButtonProps {
   isRecording: boolean;
@@ -20,33 +20,33 @@ export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
     <div className="flex flex-col items-center gap-3">
       <div className="relative flex items-center justify-center">
         {isRecording && (
-          <div className="absolute w-28 h-28 rounded-full bg-indigo-500/30 recording-pulse" />
+          <div className="absolute w-24 h-24 rounded-full bg-boro-red-soft boro-recording-pulse" />
         )}
 
         <button
           onClick={onToggle}
           disabled={disabled}
-          className={`relative z-10 w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 shadow-2xl ${
+          className={`relative z-10 w-20 h-20 rounded-full flex items-center justify-center transition-all duration-200 active:scale-[0.98] ${
             disabled
-              ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+              ? 'bg-surface-dim text-boro-muted2 cursor-not-allowed border border-boro-border'
               : isRecording
-              ? 'bg-rose-600 hover:bg-rose-700 text-white ring-4 ring-rose-500/30 scale-105'
-              : 'bg-indigo-600 hover:bg-indigo-500 text-white ring-4 ring-indigo-500/30 hover:scale-105 active:scale-95'
+              ? 'bg-boro-red text-white'
+              : 'bg-boro-black text-white hover:bg-boro-text'
           }`}
           aria-label={isRecording ? 'Stop Recording' : 'Start Recording'}
         >
           {isRecording ? (
-            <Square className="w-8 h-8 fill-current" />
+            <Square className="w-6 h-6 fill-current" />
           ) : (
-            <Mic className="w-8 h-8" />
+            <Mic className="w-7 h-7 stroke-[1.75]" />
           )}
         </button>
       </div>
 
       {statusText && (
         <span
-          className={`text-xs font-semibold tracking-wide transition-colors ${
-            isRecording ? 'text-rose-400 animate-pulse' : 'text-slate-400'
+          className={`text-xs font-medium tracking-tight transition-colors ${
+            isRecording ? 'text-boro-red animate-pulse' : 'text-boro-muted'
           }`}
         >
           {statusText}

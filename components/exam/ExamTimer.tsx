@@ -26,7 +26,6 @@ export const ExamTimer: React.FC<ExamTimerProps> = ({
 
     if (phase === 'IDLE' || duration <= 0) return;
 
-    // Web Worker 초기화 (백그라운드 스로틀링 방지)
     try {
       const worker = new Worker('/workers/timerWorker.js');
       workerRef.current = worker;
@@ -37,7 +36,6 @@ export const ExamTimer: React.FC<ExamTimerProps> = ({
         if (type === 'TICK') {
           setSecondsLeft(remainingSeconds);
 
-          // 5초 전 경고음
           if (remainingSeconds === 5 && !hasWarnedRef.current) {
             hasWarnedRef.current = true;
             playWarningBeep();
@@ -61,7 +59,7 @@ export const ExamTimer: React.FC<ExamTimerProps> = ({
         workerRef.current = null;
       };
     } catch (err) {
-      console.warn('Web Worker initialization fallback to setInterval:', err);
+      console.warn('Web Worker fallback:', err);
       const timer = setInterval(() => {
         setSecondsLeft((prev) => {
           if (prev <= 1) {
@@ -85,19 +83,18 @@ export const ExamTimer: React.FC<ExamTimerProps> = ({
   const strokeDashoffset = 283 - (283 * progress) / 100;
 
   const isPrep = phase === 'PREPARATION';
-  const strokeColor = isPrep ? '#f59e0b' : secondsLeft <= 5 ? '#ef4444' : '#6366f1';
+  const strokeColor = isPrep ? '#080909' : secondsLeft <= 5 ? '#ba1a1a' : '#0050d7';
 
   return (
     <div className="flex flex-col items-center justify-center">
       <div className="relative w-36 h-36 flex items-center justify-center">
-        {/* SVG 원형 카운트다운 */}
         <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
           <circle
             cx="50"
             cy="50"
             r="45"
-            className="stroke-slate-800"
-            strokeWidth="6"
+            className="stroke-surface-container"
+            strokeWidth="5"
             fill="transparent"
           />
           <circle
@@ -105,7 +102,7 @@ export const ExamTimer: React.FC<ExamTimerProps> = ({
             cy="50"
             r="45"
             stroke={strokeColor}
-            strokeWidth="6"
+            strokeWidth="5"
             fill="transparent"
             strokeDasharray="283"
             strokeDashoffset={strokeDashoffset}
@@ -115,18 +112,18 @@ export const ExamTimer: React.FC<ExamTimerProps> = ({
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-xs uppercase tracking-widest font-semibold text-slate-400">
-            {isPrep ? 'Prep Time' : 'Speaking'}
+          <span className="text-[10px] uppercase tracking-wider font-semibold text-boro-muted">
+            {isPrep ? 'Prep' : 'Speaking'}
           </span>
           <span
-            className={`text-3xl font-extrabold tracking-tight font-mono ${
-              secondsLeft <= 5 && !isPrep ? 'text-rose-400 animate-pulse' : 'text-white'
+            className={`text-3xl sm:text-4xl font-semibold tracking-tighter ${
+              secondsLeft <= 5 && !isPrep ? 'text-boro-red animate-pulse' : 'text-boro-text'
             }`}
           >
             {Math.floor(secondsLeft / 60)}:
             {(secondsLeft % 60).toString().padStart(2, '0')}
           </span>
-          <span className="text-[10px] text-slate-500 font-medium">
+          <span className="text-[10px] text-boro-muted2 font-medium">
             / {Math.floor(duration / 60)}:{(duration % 60).toString().padStart(2, '0')}
           </span>
         </div>

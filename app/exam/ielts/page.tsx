@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ExamHeader } from '@/components/exam/ExamHeader';
 import { ExamTimer } from '@/components/exam/ExamTimer';
@@ -13,7 +13,7 @@ import { unlockAudioContext, playTransitionChime } from '@/lib/audio/soundEffect
 import { saveAudioRecord, saveLocalEvaluation } from '@/lib/db/localAudioStore';
 import { CuratedQuestion } from '@/lib/ai/curator';
 import { EvaluationResult } from '@/lib/ai/evaluator';
-import { Sparkles, MessageSquare, AlertTriangle, FileText, CheckCircle } from 'lucide-react';
+import { Sparkles, MessageSquare, FileText } from 'lucide-react';
 
 type IeltsPart = 'IELTS_PART_1' | 'IELTS_PART_2' | 'IELTS_PART_3';
 type ExamState = 'IDLE' | 'LOADING_QUESTION' | 'PREPARATION' | 'SPEAKING' | 'EVALUATING' | 'RESULT';
@@ -27,12 +27,10 @@ export default function IeltsExamPage() {
   const [sessionUuid, setSessionUuid] = useState<string>('');
   const [prepNotes, setPrepNotes] = useState<string>(''); // Part 2 메모장
 
-  const { isRecording, recordingDuration, startRecording, stopRecording, resetRecording } =
-    useAudioRecorder();
+  const { isRecording, startRecording, stopRecording, resetRecording } = useAudioRecorder();
   const {
     transcript,
     interimTranscript,
-    isListening,
     startListening,
     stopListening,
     resetTranscript,
@@ -62,7 +60,6 @@ export default function IeltsExamPage() {
       const data: CuratedQuestion = await res.json();
       setQuestion(data);
 
-      // Part 2는 60초 준비, Part 1 및 Part 3는 즉시 발화
       if (part === 'IELTS_PART_2' && data.preparationSeconds > 0) {
         setExamState('PREPARATION');
       } else {
@@ -108,7 +105,6 @@ export default function IeltsExamPage() {
       console.warn('Stop recording failed:', err);
     }
 
-    // 발화 오디오 Blob을 IndexedDB에 로컬 저장 (트래픽 $0)
     let audioKey = '';
     if (recorded?.blob && question) {
       try {
@@ -143,7 +139,6 @@ export default function IeltsExamPage() {
       const evalData: EvaluationResult = await evalRes.json();
       setEvaluation(evalData);
 
-      // 로컬 평가 이력 저장
       await saveLocalEvaluation({
         session_uuid: sessionUuid,
         exam_type: 'IELTS',
@@ -180,7 +175,7 @@ export default function IeltsExamPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#090d16] text-slate-100">
+    <div className="min-h-screen flex flex-col bg-surface text-boro-text">
       <ExamHeader
         examType="IELTS"
         sectionTitle={
@@ -197,23 +192,23 @@ export default function IeltsExamPage() {
       <main className="flex-1 max-w-4xl w-full mx-auto p-6 flex flex-col justify-center items-center">
         {/* 대기 상태 (Start Exam) */}
         {examState === 'IDLE' && (
-          <div className="text-center space-y-6 max-w-md">
-            <div className="w-20 h-20 rounded-3xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center mx-auto text-indigo-400 shadow-xl shadow-indigo-600/10">
-              <MessageSquare className="w-10 h-10" />
+          <div className="boro-card p-8 sm:p-10 text-center space-y-6 max-w-md w-full">
+            <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center mx-auto text-boro-text">
+              <MessageSquare className="w-6 h-6 stroke-[1.5]" />
             </div>
 
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-white tracking-tight">
-                IELTS Speaking Simulation
+            <div className="space-y-1.5">
+              <h2 className="text-2xl font-semibold tracking-tight text-boro-text">
+                IELTS Speaking
               </h2>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+              <p className="text-xs sm:text-sm text-boro-muted leading-relaxed">
                 공식 시험관 인터뷰 시뮬레이션입니다. Part 1 질의응답, Part 2 큐카드(1분 준비 / 2분 발화), Part 3 심층 토론이 순서대로 진행됩니다.
               </p>
             </div>
 
             <button
               onClick={handleStartExam}
-              className="w-full py-4 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-xl shadow-indigo-600/30 transition-all hover:scale-105 active:scale-95"
+              className="boro-btn-primary w-full py-3.5 px-6 text-sm"
             >
               Start Official Session
             </button>
@@ -223,24 +218,24 @@ export default function IeltsExamPage() {
         {/* 질문 로딩 중 */}
         {examState === 'LOADING_QUESTION' && (
           <div className="text-center space-y-3">
-            <div className="w-10 h-10 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto" />
-            <p className="text-xs font-semibold text-slate-400">Curating adaptive agenda...</p>
+            <div className="w-8 h-8 border-2 border-boro-blue border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-xs font-semibold text-boro-muted">Curating adaptive agenda...</p>
           </div>
         )}
 
         {/* Part 2: 1분 준비 (Preparation) 단계 */}
         {examState === 'PREPARATION' && question && (
           <div className="w-full space-y-6">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 glass-panel p-6 rounded-2xl border border-slate-800">
-              <div className="space-y-2 text-center sm:text-left">
-                <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                  Part 2 Cue Card • Preparation Time (1 Minute)
+            <div className="boro-card p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="space-y-2 text-center sm:text-left flex-1">
+                <span className="boro-chip">
+                  Part 2 Cue Card • Preparation Time
                 </span>
-                <h3 className="text-lg sm:text-xl font-bold text-white">
+                <h3 className="text-lg sm:text-xl font-semibold text-boro-text">
                   "{question.questionText}"
                 </h3>
                 {question.cueCardPoints && (
-                  <ul className="text-xs text-slate-300 space-y-1 pt-2 list-disc list-inside">
+                  <ul className="text-xs text-boro-muted space-y-1 pt-2 list-disc list-inside">
                     {question.cueCardPoints.map((pt, i) => (
                       <li key={i}>{pt}</li>
                     ))}
@@ -258,25 +253,25 @@ export default function IeltsExamPage() {
             </div>
 
             {/* 실시간 메모장 */}
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-2">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5" />
-                Candidate Notepad (1-min Scratchpad)
+            <div className="boro-card p-5 space-y-2">
+              <span className="text-xs font-semibold text-boro-muted uppercase tracking-wider flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 stroke-[1.5]" />
+                Candidate Notepad (1-minute scratchpad)
               </span>
               <textarea
                 value={prepNotes}
                 onChange={(e) => setPrepNotes(e.target.value)}
                 placeholder="Jot down keywords, bullet points, and high-level vocabulary for your 2-minute turn..."
-                className="w-full h-28 bg-slate-950/60 text-slate-200 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none font-mono"
+                className="w-full h-28 bg-surface-container text-boro-text text-xs p-3 rounded-card border border-boro-border focus:outline-none focus:border-boro-text resize-none font-mono"
               />
             </div>
 
             <div className="flex justify-end">
               <button
                 onClick={handlePrepComplete}
-                className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-colors"
+                className="boro-btn-secondary px-5 py-2.5 text-xs"
               >
-                Skip Preparation & Start Speaking Now
+                Skip Preparation & Start Speaking
               </button>
             </div>
           </div>
@@ -286,18 +281,17 @@ export default function IeltsExamPage() {
         {examState === 'SPEAKING' && question && (
           <div className="w-full space-y-8 flex flex-col items-center">
             {/* 질문 카드 */}
-            <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-slate-800 text-center space-y-3 w-full max-w-2xl">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/80 border border-indigo-700/50 text-indigo-300 text-xs font-semibold">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>{question.domainName} • Level {question.cognitiveLevel}</span>
-              </div>
+            <div className="boro-card p-6 sm:p-8 text-center space-y-3 w-full max-w-2xl">
+              <span className="boro-chip">
+                {question.domainName} • Level {question.cognitiveLevel}
+              </span>
 
-              <h2 className="text-xl sm:text-2xl font-bold text-white leading-snug">
+              <h2 className="text-xl sm:text-2xl font-semibold text-boro-text leading-snug">
                 "{question.questionText}"
               </h2>
 
               {question.syntacticGapPrompt && (
-                <p className="text-xs text-amber-300/80 bg-amber-950/30 px-3 py-1.5 rounded-lg border border-amber-800/40 inline-block">
+                <p className="text-xs text-boro-muted bg-surface-container px-3 py-1.5 rounded-full inline-block">
                   💡 Hint: {question.syntacticGapPrompt}
                 </p>
               )}
@@ -314,13 +308,13 @@ export default function IeltsExamPage() {
               <MicrophoneButton
                 isRecording={isRecording}
                 onToggle={handleFinishSpeaking}
-                statusText={isRecording ? 'Listening... Tap to Finish Early' : 'Initializing...'}
+                statusText={isRecording ? 'Speaking... Tap to finish early' : 'Initializing...'}
               />
             </div>
 
             {/* 실시간 STT 프리뷰 */}
-            <div className="w-full max-w-xl glass-card p-4 rounded-xl border border-slate-800/80 text-center min-h-[60px] flex items-center justify-center">
-              <p className="text-xs text-slate-300 italic">
+            <div className="w-full max-w-xl boro-panel p-4 text-center min-h-[56px] flex items-center justify-center">
+              <p className="text-xs text-boro-muted italic">
                 {transcript || interimTranscript || 'Start speaking clearly into your microphone...'}
               </p>
             </div>
@@ -329,11 +323,11 @@ export default function IeltsExamPage() {
 
         {/* 채점 중 상태 */}
         {examState === 'EVALUATING' && (
-          <div className="text-center space-y-4">
-            <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto" />
+          <div className="text-center space-y-3">
+            <div className="w-8 h-8 border-2 border-boro-blue border-t-transparent rounded-full animate-spin mx-auto" />
             <div className="space-y-1">
-              <h3 className="text-base font-bold text-white">Examiner Evaluation in Progress</h3>
-              <p className="text-xs text-slate-400">
+              <h3 className="text-sm font-semibold text-boro-text">Examiner Evaluation in Progress</h3>
+              <p className="text-xs text-boro-muted">
                 Analyzing Fluency, Lexical Resource, Grammatical Accuracy, and Pronunciation...
               </p>
             </div>
@@ -343,10 +337,8 @@ export default function IeltsExamPage() {
         {/* 채점 결과 (Result) */}
         {examState === 'RESULT' && evaluation && question && (
           <div className="w-full space-y-6">
-            {/* 로컬 오디오 복습 플레이어 */}
             <AudioReviewPlayer sessionUuid={sessionUuid} />
 
-            {/* 평가 리포트 */}
             <EvaluationReport
               evaluation={evaluation}
               questionText={question.questionText}

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#090d16',
+  themeColor: '#fcf8f8',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -24,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="bg-[#090d16] text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white antialiased">
+    <html lang="en">
+      <body className="bg-[#fcf8f8] text-[#1c1b1b] min-h-screen selection:bg-[#dbe1ff] selection:text-[#0050d7] antialiased">
         <div className="min-h-screen flex flex-col">
           {children}
         </div>
