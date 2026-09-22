@@ -1,8 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <rect width="512" height="512" rx="128" fill="#090D16"/>
-  <circle cx="256" cy="256" r="180" stroke="#6366F1" stroke-width="24" stroke-opacity="0.3"/>
-  <circle cx="256" cy="256" r="140" fill="#6366F1" fill-opacity="0.1" stroke="#6366F1" stroke-width="16"/>
-  <rect x="224" y="160" width="64" height="128" rx="32" fill="#6366F1"/>
-  <path d="M176 256C176 300.183 211.817 336 256 336C300.183 336 336 300.183 336 256" stroke="#818CF8" stroke-width="24" stroke-linecap="round"/>
-  <line x1="256" y1="336" x2="256" y2="390" stroke="#818CF8" stroke-width="24" stroke-linecap="round"/>
+  <!-- Boro UI Minimalist App Icon: Polestar-inspired Black & Warm White -->
+  <rect width="512" height="512" rx="128" fill="#080909"/>
+  
+  <!-- Outer Hairline Accent Ring -->
+  <circle cx="256" cy="256" r="192" stroke="#E5E2E1" stroke-width="2" stroke-opacity="0.2"/>
+
+  <!-- Iconic Circular Boundary (1.5pt proportional line-weight) -->
+  <circle cx="256" cy="256" r="156" stroke="#FCF8F8" stroke-width="14"/>
+
+  <!-- Centered Typographic 'F' with Inter/Architectural Precision -->
+  <text 
+    x="256" 
+    y="262" 
+    text-anchor="middle" 
+    dominant-baseline="central" 
+    fill="#FCF8F8" 
+    font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+    font-size="192" 
+    font-weight="600" 
+    letter-spacing="-0.04em"
+  >F</text>
 </svg>

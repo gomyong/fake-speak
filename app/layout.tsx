@@ -6,7 +6,8 @@ export const metadata: Metadata = {
   description: 'AI-powered adaptive speaking exam preparation for IELTS and TOEIC Speaking. Zero repetition, strict official rubrics, and 100% private local audio.',
   manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/icon.svg',
+    apple: '/apple-touch-icon.png',
   },
 };
 
