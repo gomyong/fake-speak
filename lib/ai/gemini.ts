@@ -13,7 +13,7 @@ export function getGeminiClient(): GoogleGenerativeAI | null {
 }
 
 export const GEMINI_PRO_MODEL = 'gemini-1.5-pro';
-export const GEMINI_FLASH_MODEL = 'gemini-1.5-flash';
+export const GEMINI_FLASH_MODEL = 'gemini-2.0-flash';
 export const GEMINI_EMBEDDING_MODEL = 'text-embedding-004';
 
 // 텍스트 임베딩 생성 함수 (768차원 벡터)
