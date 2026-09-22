@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Mic, Award, Zap, History, Sparkles, ArrowRight, ShieldCheck, Database, Volume2 } from 'lucide-react';
+import { Award, Zap, History, ArrowRight, Volume2 } from 'lucide-react';
 import { StreakCalendar } from '@/components/dashboard/StreakCalendar';
 import { getRecentEvaluations, LocalEvaluationRecord } from '@/lib/db/localAudioStore';
 
@@ -24,40 +24,13 @@ export default function HomePage() {
   return (
     <main className="flex-1 max-w-5xl w-full mx-auto px-6 py-10 space-y-12">
       {/* 헤더 히어로 섹션 */}
-      <div className="text-center space-y-4 pt-4">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-950/80 border border-indigo-700/50 text-indigo-300 text-xs font-semibold shadow-inner">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Zero Repetition & Adaptive Difficulty Engine</span>
-        </div>
-
+      <div className="text-center pt-6 pb-2">
         <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-white">
           FAKE_
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400">
             SPEAK
           </span>
         </h1>
-
-        <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
-          어제 다뤘던 주제와 문장 구조는 절대 반복하지 않습니다.
-          <br className="hidden sm:inline" />
-          공인 시험관 페르소나와 100% 로컬 프라이빗 오디오로 나의 한계를 매일 넓혀보세요.
-        </p>
-
-        {/* 제로 인프라 & 프라이버시 뱃지 */}
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-[11px] font-medium text-slate-400">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            100% Client-side Audio (IndexedDB)
-          </span>
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-[11px] font-medium text-slate-400">
-            <Database className="w-3.5 h-3.5 text-indigo-400" />
-            pgvector Semantic Deduplication
-          </span>
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-[11px] font-medium text-slate-400">
-            <Zap className="w-3.5 h-3.5 text-amber-400" />
-            Gemini 1.5 Official Rubric Grading
-          </span>
-        </div>
       </div>
 
       {/* 대시보드 스트릭 & 누적 통계 */}
