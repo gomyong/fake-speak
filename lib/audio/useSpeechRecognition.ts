@@ -20,6 +20,17 @@ export function useSpeechRecognition() {
         setIsSupported(false);
       }
     }
+
+    // 컴포넌트 언마운트 시 백그라운드 청취 정리
+    return () => {
+      shouldListenRef.current = false;
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch (e) {}
+        recognitionRef.current = null;
+      }
+    };
   }, []);
 
   const startListening = useCallback(() => {
@@ -49,21 +60,22 @@ export function useSpeechRecognition() {
     shouldListenRef.current = true;
 
     recognition.onresult = (event: any) => {
-      let finalStr = '';
+      let newFinalStr = '';
       let interimStr = '';
 
-      for (let i = 0; i < event.results.length; i++) {
+      // event.resultIndex부터 순회하여 이미 확정된 이전 문장이 중복 누적되는 것을 방지
+      for (let i = event.resultIndex; i < event.results.length; i++) {
         const item = event.results[i];
         if (item.isFinal) {
-          finalStr += item[0].transcript + ' ';
+          newFinalStr += item[0].transcript + ' ';
         } else {
           interimStr += item[0].transcript;
         }
       }
 
-      if (finalStr) {
+      if (newFinalStr) {
         setTranscript((prev) => {
-          const combined = (prev + ' ' + finalStr).trim();
+          const combined = (prev + ' ' + newFinalStr).trim();
           return combined;
         });
       }

@@ -30,6 +30,16 @@ export const EvaluationReport: React.FC<EvaluationReportProps> = ({
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 pb-12">
+      {/* 휴리스틱 폴백 안내 배너 */}
+      {evaluation.is_fallback && (
+        <div className="p-4 rounded-card bg-amber-50 border border-amber-200 flex items-center gap-3 text-amber-800 text-xs animate-fade-in">
+          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+          <p>
+            <strong>임시 로컬 분석:</strong> AI 서버 일시 응답 지연으로 로컬 휴리스틱 분석 결과가 표시되었습니다.
+          </p>
+        </div>
+      )}
+
       {/* 상단 총점 헤더 카드 (Boro UI Architectural Header) */}
       <div className="boro-card p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div className="space-y-1.5">

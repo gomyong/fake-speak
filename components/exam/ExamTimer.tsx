@@ -19,10 +19,16 @@ export const ExamTimer: React.FC<ExamTimerProps> = ({
 }) => {
   const [secondsLeft, setSecondsLeft] = useState<number>(duration);
   const [isMuted, setIsMuted] = useState<boolean>(false);
+  const isMutedRef = useRef<boolean>(isMuted);
   const workerRef = useRef<Worker | null>(null);
   const hasWarnedRef = useRef<boolean>(false);
   const hasPlayedStartBeepRef = useRef<boolean>(false);
   const onCompleteRef = useRef(onComplete);
+
+  // isMuted 상태 ref 동기화 (의존성 배열에서 제외하여 타이머 리셋 방지)
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
 
   // onComplete 참조 갱신 (부모 컴포넌트 리렌더링에 의한 타이머 재시작 방지)
   useEffect(() => {
@@ -39,7 +45,7 @@ export const ExamTimer: React.FC<ExamTimerProps> = ({
     // 시작 비프음 1회만 재생 (음소거 상태가 아닐 때)
     if (autoStart && phase === 'SPEAKING' && !hasPlayedStartBeepRef.current) {
       hasPlayedStartBeepRef.current = true;
-      if (!isMuted) {
+      if (!isMutedRef.current) {
         playStartBeep();
       }
     }
@@ -57,12 +63,12 @@ export const ExamTimer: React.FC<ExamTimerProps> = ({
           // 5초 전 경고음 (단 1회)
           if (remainingSeconds === 5 && !hasWarnedRef.current) {
             hasWarnedRef.current = true;
-            if (!isMuted) {
+            if (!isMutedRef.current) {
               playWarningBeep();
             }
           }
         } else if (type === 'COMPLETED') {
-          if (!isMuted) {
+          if (!isMutedRef.current) {
             playEndBeep();
           }
           onCompleteRef.current();
@@ -84,7 +90,7 @@ export const ExamTimer: React.FC<ExamTimerProps> = ({
         setSecondsLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
-            if (!isMuted) {
+            if (!isMutedRef.current) {
               playEndBeep();
             }
             onCompleteRef.current();
@@ -92,7 +98,7 @@ export const ExamTimer: React.FC<ExamTimerProps> = ({
           }
           if (prev === 6 && !hasWarnedRef.current) {
             hasWarnedRef.current = true;
-            if (!isMuted) {
+            if (!isMutedRef.current) {
               playWarningBeep();
             }
           }
@@ -102,7 +108,7 @@ export const ExamTimer: React.FC<ExamTimerProps> = ({
 
       return () => clearInterval(timer);
     }
-  }, [duration, phase, autoStart, isMuted]);
+  }, [duration, phase, autoStart]);
 
   const progress = duration > 0 ? ((duration - secondsLeft) / duration) * 100 : 0;
   const strokeDashoffset = 283 - (283 * progress) / 100;

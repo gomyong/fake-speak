@@ -1,6 +1,6 @@
 // lib/ai/curator.ts
 import { TOPIC_DOMAINS, TopicDomain } from '@/lib/constants/topics';
-import { generateEmbedding } from './gemini';
+import { generateEmbedding, getGeminiClient, GEMINI_FLASH_MODEL } from './gemini';
 import { findSimilarQuestions, saveQuestionToHistory } from '@/lib/db/neon';
 
 export interface CuratorRequest {
@@ -71,23 +71,74 @@ export async function curateNextQuestion(params: CuratorRequest): Promise<Curate
     syntacticGapPrompt = 'Consider expressing hypothetical outcomes using "Had it not been for..." or "If they had...".';
   }
 
-  // 5. 시맨틱 중복 제거 검증 (PRD 2.2 pgvector 0.72 코사인 유사도)
+  // 5. 질문 생성 및 시맨틱 중복 제거 검증 (Gemini 동적 생성 + 정적 템플릿 폴백 + pgvector 중복 방지)
   let finalQuestion = rawQuestion;
-  try {
-    const embedding = await generateEmbedding(finalQuestion);
-    if (embedding) {
-      const similar = await findSimilarQuestions(embedding, 0.72, 60);
-      if (similar.length > 0) {
-        console.warn(`[Curator] Semantic collision detected (similarity=${similar[0].similarity.toFixed(3)}). Alternate selected.`);
-        // 중복 시 다른 서브토픽이나 대안 질문으로 스위치
-        const altLevel = (cognitiveLevel === 3 ? 2 : 3) as 1 | 2 | 3;
-        finalQuestion =
-          altLevel === 3
-            ? selectedSub.cognitiveQuestions.level3
-            : selectedSub.cognitiveQuestions.level2;
-      }
+  let finalEmbedding: number[] | null = null;
+  const genAI = getGeminiClient();
 
-      // Neon DB에 질문 아카이브
+  // 최대 3회 시맨틱 중복 방지 루프
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    // 1회차 이상이거나 Gemini 사용 가능 시 새로운 동적 질문 생성 시도
+    if (attempt > 1 || genAI) {
+      if (genAI) {
+        try {
+          const model = genAI.getGenerativeModel({
+            model: GEMINI_FLASH_MODEL,
+            generationConfig: { temperature: 0.7 + attempt * 0.1 },
+          });
+
+          const prompt = `You are a certified senior examiner for ${examType}.
+Generate ONE unique, high-quality, and realistic question for Section: ${partOrQuestion}.
+Domain: ${selectedDomain.name} (${selectedDomain.nameKo})
+Sub-topic: ${selectedSub.title}
+Cognitive Complexity Level: Level ${cognitiveLevel} (1=Descriptive/Factual, 2=Comparative/Analytical, 3=Speculative/Evaluation).
+${syntacticGapPrompt ? `Target Grammar: Encourage candidate to use: ${syntacticGapPrompt}` : ''}
+${attempt > 1 ? `Note: Avoid the previous collision question: "${finalQuestion}". Create a fresh perspective.` : ''}
+
+Output ONLY the question string without quotation marks, markdown, or greetings.`;
+
+          const result = await model.generateContent(prompt);
+          const generated = result.response.text().trim().replace(/^["']|["']$/g, '');
+          if (generated && generated.length > 10) {
+            finalQuestion = generated;
+          }
+        } catch (geminiErr) {
+          console.warn(`[Curator] Gemini dynamic question generation attempt ${attempt} failed, using template:`, geminiErr);
+          // 폴백: 템플릿의 다른 레벨 질문 선택
+          const levels = [1, 2, 3].filter((l) => l !== cognitiveLevel);
+          const nextLevel = levels[(attempt - 1) % levels.length] as 1 | 2 | 3;
+          finalQuestion =
+            nextLevel === 3
+              ? selectedSub.cognitiveQuestions.level3
+              : nextLevel === 2
+              ? selectedSub.cognitiveQuestions.level2
+              : selectedSub.cognitiveQuestions.level1;
+        }
+      }
+    }
+
+    try {
+      // 질문 텍스트에 1:1 대응하는 임베딩 생성
+      finalEmbedding = await generateEmbedding(finalQuestion);
+      if (finalEmbedding) {
+        const similar = await findSimilarQuestions(finalEmbedding, 0.75, 60);
+        if (similar.length === 0) {
+          // 중복 없음: 루프 탈출
+          break;
+        }
+        console.warn(
+          `[Curator] Semantic collision detected on attempt ${attempt} (similarity=${similar[0].similarity.toFixed(3)}). Retrying with a new question...`
+        );
+      }
+    } catch (embErr) {
+      console.warn('[Curator] Vector deduplication check skipped:', embErr);
+      break;
+    }
+  }
+
+  // Neon DB에 실제 최종 선정된 질문과 그에 일치하는 임베딩 저장
+  if (finalEmbedding) {
+    try {
       await saveQuestionToHistory({
         examType,
         partOrQuestion,
@@ -95,11 +146,11 @@ export async function curateNextQuestion(params: CuratorRequest): Promise<Curate
         subTopic: selectedSub.title,
         cognitiveLevel,
         questionText: finalQuestion,
-        embedding,
+        embedding: finalEmbedding,
       });
+    } catch (saveErr) {
+      console.warn('[Curator] Failed to archive question to history:', saveErr);
     }
-  } catch (err) {
-    console.warn('[Curator] Vector deduplication skipped or failed:', err);
   }
 
   // 6. 시험 규격별 시간 및 큐카드 세팅 (PRD 3절 규격)

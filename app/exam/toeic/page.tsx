@@ -249,6 +249,7 @@ export default function ToeicExamPage() {
         lexical_enhancements: evalData.lexical_enhancements,
         model_answer: evalData.model_answer_band_8_5,
         audio_storage_key: audioKey,
+        duration_seconds: recorded?.durationSeconds || currentSpec.respSec,
         created_at: new Date(),
       });
 

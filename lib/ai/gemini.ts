@@ -12,7 +12,7 @@ export function getGeminiClient(): GoogleGenerativeAI | null {
   return genAI;
 }
 
-export const GEMINI_PRO_MODEL = 'gemini-1.5-pro';
+// 주력 AI 모델: Gemini 2.0 Flash (초저지연 실시간 추론 및 채점)
 export const GEMINI_FLASH_MODEL = 'gemini-2.0-flash';
 export const GEMINI_EMBEDDING_MODEL = 'text-embedding-004';
 

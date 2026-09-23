@@ -151,6 +151,7 @@ export default function IeltsExamPage() {
         lexical_enhancements: evalData.lexical_enhancements,
         model_answer: evalData.model_answer_band_8_5,
         audio_storage_key: audioKey,
+        duration_seconds: recorded?.durationSeconds || 45,
         created_at: new Date(),
       });
 

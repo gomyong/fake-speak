@@ -21,6 +21,7 @@ export interface EvaluationResult {
   }>;
   model_answer_band_8_5: string;
   suggested_next_focus: string;
+  is_fallback?: boolean;
 }
 
 export async function evaluateSpeakingSession(params: {
@@ -117,6 +118,7 @@ Return ONLY a valid JSON object matching this schema:
       const response = await model.generateContent(systemPrompt);
       const text = response.response.text();
       const parsed: EvaluationResult = JSON.parse(text);
+      parsed.is_fallback = false;
       return parsed;
     } catch (err) {
       console.warn('Gemini API evaluation failed, falling back to heuristic engine:', err);
@@ -211,5 +213,6 @@ function generateHeuristicEvaluation(
     ],
     model_answer_band_8_5: `Regarding "${questionText.slice(0, 60)}...", it is imperative to recognize that while conventional perspectives emphasize immediate pragmatic utility, contemporary evidence suggests a nuanced equilibrium between systemic regulation and individual initiative. Furthermore, were policymakers to enact targeted structural reforms, long-term societal resilience would be substantially reinforced.`,
     suggested_next_focus: 'Incorporate complex concession clauses such as "Notwithstanding the aforementioned..." and "Albeit..." in your opening arguments.',
+    is_fallback: true,
   };
 }

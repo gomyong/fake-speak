@@ -24,6 +24,7 @@ export interface LocalEvaluationRecord {
   lexical_enhancements: Array<{ original: string; upgraded: string }>;
   model_answer: string;
   audio_storage_key?: string;
+  duration_seconds?: number;
   created_at: Date;
 }
 
@@ -84,8 +85,15 @@ export async function getAudioRecordBySession(sessionUuid: string): Promise<Loca
 export async function saveLocalEvaluation(record: Omit<LocalEvaluationRecord, 'id'>): Promise<number> {
   const id = await localDB.evaluations.add(record);
   
-  // 프로필 통계 업데이트
-  await updateProfileSpeakingStats(record.audio_storage_key ? 60 : 30);
+  // 실제 측정된 발화 시간을 누적 (없을 시 기본 추정치 적용)
+  const actualDuration =
+    record.duration_seconds && record.duration_seconds > 0
+      ? Math.round(record.duration_seconds)
+      : record.audio_storage_key
+      ? 45
+      : 30;
+
+  await updateProfileSpeakingStats(actualDuration);
   return id as number;
 }
 
