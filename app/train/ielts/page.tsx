@@ -1,7 +1,7 @@
 // app/train/ielts/page.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -16,6 +16,8 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import { TRAINING_UNITS, TrainingUnit, TrainingSentence } from '@/lib/constants/curriculum';
+import { IELTS_PREDICTED_TOPICS } from '@/lib/constants/ieltsPredictedTopics';
+import { TopicSelectorModal } from '@/components/training/TopicSelectorModal';
 import { ChunkViewer } from '@/components/training/ChunkViewer';
 import { ShadowingPlayer } from '@/components/training/ShadowingPlayer';
 import { BlindRecallRecorder } from '@/components/training/BlindRecallRecorder';
@@ -33,6 +35,7 @@ export default function IeltsTrainingPage() {
   const [currentSentenceIdx, setCurrentSentenceIdx] = useState<number>(0);
   const [activeStep, setActiveStep] = useState<TrainingStep>('CHUNK');
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
+  const [isTopicModalOpen, setIsTopicModalOpen] = useState<boolean>(false);
   const [weakStats, setWeakStats] = useState<{ totalCount: number; dueCount: number; masteredCount: number }>({
     totalCount: 0,
     dueCount: 0,
@@ -54,11 +57,38 @@ export default function IeltsTrainingPage() {
   const activeSentence =
     customSentence || currentUnit.sentences[currentSentenceIdx] || currentUnit.sentences[0];
 
+  // 현재 유닛의 기출 주제 및 질문 정보
+  const currentTopicInfo = useMemo(() => {
+    for (const topic of IELTS_PREDICTED_TOPICS) {
+      const q = topic.questions.find((item) => item.unit.id === selectedUnitId);
+      if (q) return { topic, question: q };
+    }
+    return null;
+  }, [selectedUnitId]);
+
+  const currentTopicIndex = currentTopicInfo
+    ? IELTS_PREDICTED_TOPICS.findIndex((t) => t.id === currentTopicInfo.topic.id)
+    : -1;
+
   const handleSelectUnit = (id: string) => {
     setSelectedUnitId(id);
     setCurrentSentenceIdx(0);
     setCustomSentence(null);
     setActiveStep('CHUNK');
+  };
+
+  const handlePrevTopic = () => {
+    if (currentTopicIndex > 0) {
+      const prevTopic = IELTS_PREDICTED_TOPICS[currentTopicIndex - 1];
+      handleSelectUnit(prevTopic.questions[0].unit.id);
+    }
+  };
+
+  const handleNextTopic = () => {
+    if (currentTopicIndex >= 0 && currentTopicIndex < IELTS_PREDICTED_TOPICS.length - 1) {
+      const nextTopic = IELTS_PREDICTED_TOPICS[currentTopicIndex + 1];
+      handleSelectUnit(nextTopic.questions[0].unit.id);
+    }
   };
 
   const handleSelectForShadowing = (text: string, ko: string) => {
@@ -77,6 +107,14 @@ export default function IeltsTrainingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-surface text-boro-text">
+      {/* 45개 기출/예상 주제 선택 모달 */}
+      <TopicSelectorModal
+        isOpen={isTopicModalOpen}
+        onClose={() => setIsTopicModalOpen(false)}
+        currentUnitId={selectedUnitId}
+        onSelectUnit={handleSelectUnit}
+      />
+
       {/* 1분 퀵 복습 모달 */}
       <WeakChunkReviewModal
         isOpen={isReviewModalOpen}
@@ -108,6 +146,15 @@ export default function IeltsTrainingPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* 주제 선택 모달 열기 버튼 */}
+          <button
+            onClick={() => setIsTopicModalOpen(true)}
+            className="text-xs font-semibold px-3 py-1.5 rounded-full bg-boro-black text-white hover:bg-boro-black/90 flex items-center gap-1.5 transition-colors shadow-sm"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>기출 45개 주제 선택</span>
+          </button>
+
           {weakStats.dueCount > 0 && (
             <button
               onClick={() => setIsReviewModalOpen(true)}
@@ -125,22 +172,93 @@ export default function IeltsTrainingPage() {
       </header>
 
       <main className="flex-1 max-w-4xl w-full mx-auto p-6 space-y-6">
-        {/* 파트 선택 탭 */}
-        <div className="flex flex-wrap gap-2 border-b border-boro-border/60 pb-3">
-          {ieltsUnits.map((unit) => (
+        {/* 기출 주제 네비게이션 배너 */}
+        <div className="bg-white border border-boro-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              {currentTopicInfo && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-container text-boro-muted border border-boro-border/60">
+                  {currentTopicInfo.topic.screenshotId}
+                </span>
+              )}
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  currentTopicInfo?.topic.part === 1
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                    : 'bg-purple-50 text-purple-700 border border-purple-200'
+                }`}
+              >
+                {currentTopicInfo?.topic.part === 1
+                  ? 'Part 1: Personal Interview'
+                  : 'Part 2 & 3: Cue Card & Discussion'}
+              </span>
+              <span className="text-[10px] text-boro-muted font-medium">
+                45개 기출 컬렉션 중 {currentTopicIndex >= 0 ? currentTopicIndex + 1 : 1}번째 주제
+              </span>
+            </div>
+
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-base sm:text-lg font-bold text-boro-text">
+                {currentTopicInfo?.topic.topicTitle || currentUnit.topicTitle}
+              </h1>
+              <span className="text-xs text-boro-muted">
+                {currentTopicInfo?.topic.topicTitleKo}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             <button
-              key={unit.id}
-              onClick={() => handleSelectUnit(unit.id)}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
-                unit.id === selectedUnitId
-                  ? 'bg-boro-black text-white'
-                  : 'bg-white border border-boro-border text-boro-muted hover:text-boro-text'
-              }`}
+              onClick={handlePrevTopic}
+              disabled={currentTopicIndex <= 0}
+              title="이전 기출 주제"
+              className="p-2 rounded-lg border border-boro-border text-boro-muted hover:text-boro-text hover:bg-surface-container disabled:opacity-30 transition-colors"
             >
-              {unit.sectionTitle.split(':')[0]} • {unit.topicTitle}
+              <ChevronLeft className="w-4 h-4" />
             </button>
-          ))}
+            <button
+              onClick={() => setIsTopicModalOpen(true)}
+              className="px-3 py-1.5 rounded-lg border border-boro-border bg-surface-container-lowest hover:bg-surface-container text-xs font-semibold text-boro-text flex items-center gap-1.5 transition-colors"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-boro-muted" />
+              <span>전체 주제 목록 (45개)</span>
+            </button>
+            <button
+              onClick={handleNextTopic}
+              disabled={
+                currentTopicIndex < 0 ||
+                currentTopicIndex >= IELTS_PREDICTED_TOPICS.length - 1
+              }
+              title="다음 기출 주제"
+              className="p-2 rounded-lg border border-boro-border text-boro-muted hover:text-boro-text hover:bg-surface-container disabled:opacity-30 transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
+
+        {/* Part 2 전용 Candidate Task Card (큐카드 가이드) */}
+        {currentTopicInfo?.question.cuePoints && (
+          <div className="bg-amber-50/70 border border-amber-200 rounded-card p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                <span>📋 Part 2 Candidate Task Card</span>
+              </span>
+              <span className="text-[11px] text-amber-800 font-medium">
+                발표 준비 1분 • 발표 1~2분
+              </span>
+            </div>
+            <p className="text-xs text-amber-900/90 leading-relaxed">
+              You will have to talk about the topic for one to two minutes. You have one minute to think about what you are going to say. You can make some notes to help you if you wish:
+            </p>
+            <ul className="list-disc list-inside text-xs text-amber-950 font-medium space-y-1 pl-1">
+              {currentTopicInfo.question.cuePoints.map((point, idx) => (
+                <li key={idx}>{point}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
 
         {/* 질문 & 전략 팁 카드 */}
         <div className="boro-card p-6 space-y-2.5 bg-white">
