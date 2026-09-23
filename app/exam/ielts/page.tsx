@@ -121,9 +121,9 @@ export default function IeltsExamPage() {
       }
     }
 
-    // 채점 API 호출
+    // 채점 API 호출 (빈 발화 시 0.0점 처리되도록 전달)
     try {
-      const finalTranscript = transcript.trim() || 'No clear speech detected';
+      const finalTranscript = transcript.trim();
       const evalRes = await fetch('/api/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
