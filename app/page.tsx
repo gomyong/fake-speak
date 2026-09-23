@@ -2,15 +2,28 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Award, Zap, History, ArrowRight, Volume2, BookOpen, Mic, EyeOff, Sparkles } from 'lucide-react';
+import { Award, Zap, History, ArrowRight, Volume2, BookOpen, Mic, EyeOff, Sparkles, Clock, BookmarkCheck } from 'lucide-react';
 import { StreakCalendar } from '@/components/dashboard/StreakCalendar';
 import { getRecentEvaluations, LocalEvaluationRecord } from '@/lib/db/localAudioStore';
+import { getWeakChunkStats } from '@/lib/db/weakChunkStore';
+import { WeakChunkReviewModal } from '@/components/training/WeakChunkReviewModal';
 
 type MainTab = 'TRAIN' | 'EXAM';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<MainTab>('TRAIN');
   const [recentRecords, setRecentRecords] = useState<LocalEvaluationRecord[]>([]);
+  const [weakChunkStats, setWeakChunkStats] = useState<{ totalCount: number; dueCount: number; masteredCount: number }>({
+    totalCount: 0,
+    dueCount: 0,
+    masteredCount: 0,
+  });
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
+
+  const refreshStats = () => {
+    const stats = getWeakChunkStats();
+    setWeakChunkStats(stats);
+  };
 
   useEffect(() => {
     async function loadHistory() {
@@ -22,10 +35,18 @@ export default function HomePage() {
       }
     }
     loadHistory();
+    refreshStats();
   }, []);
 
   return (
     <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-10 space-y-8">
+      {/* 1분 퀵 복습 모달 */}
+      <WeakChunkReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        onUpdateStats={refreshStats}
+      />
+
       {/* 헤더 히어로 섹션 */}
       <div className="flex flex-col items-center justify-center pt-2 pb-1">
         <div className="flex items-center gap-3">
@@ -37,6 +58,38 @@ export default function HomePage() {
           </h1>
         </div>
       </div>
+
+      {/* 에빙하우스 망각곡선 취약 청크 SRS 복습 배너 */}
+      {weakChunkStats.dueCount > 0 && (
+        <div className="boro-card p-4 sm:p-5 bg-gradient-to-r from-blue-50/90 via-indigo-50/60 to-surface border border-boro-blue/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-boro-blue text-white flex items-center justify-center shrink-0">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-boro-text">
+                  오늘 복습할 취약 청크가 {weakChunkStats.dueCount}개 있습니다!
+                </h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700">
+                  SRS 망각곡선
+                </span>
+              </div>
+              <p className="text-xs text-boro-muted">
+                버벅였던 표현을 장기 기억으로 전환하는 1분 퀵 스피킹 퀴즈를 진행하세요.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsReviewModalOpen(true)}
+            className="boro-btn-primary px-5 py-2.5 text-xs flex items-center gap-1.5 whitespace-nowrap shadow-sm"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>1분 퀵 복습 시작</span>
+          </button>
+        </div>
+      )}
 
       {/* 대시보드 스트릭 & 누적 통계 */}
       <StreakCalendar />
@@ -73,9 +126,9 @@ export default function HomePage() {
       {activeTab === 'TRAIN' && (
         <div className="space-y-6">
           <div className="text-center space-y-1">
-            <h2 className="text-xl font-semibold text-boro-text">스피킹 체화 4단계 파이프라인</h2>
+            <h2 className="text-xl font-semibold text-boro-text">스피킹 체화 완성형 학습 시스템</h2>
             <p className="text-xs text-boro-muted">
-              청킹(의미 단위) 파악 → 가이드 쉐도잉 → 가림막 블라인드 스피킹 → 나만의 표현 치환
+              청킹(Chunking) → 쉐도잉 & WPM 진단 → 블라인드 리콜 → PREP 논리 빌더 → 3단계 패러프레이즈 → AI 꼬리 질문
             </p>
           </div>
 
